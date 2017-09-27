@@ -9,10 +9,10 @@ function login($mail, $password)
 
 	foreach($http_response_header as $res)
 	{
-		preg_match("(user_session=user_session_[0-9a-z_]+)", $res, $tmp);
-		if(count($tmp) > 0)
+		preg_match("(user_session=(user_session_[0-9a-z_]+))", $res, $tmp);
+		if(count($tmp) >= 2)
 		{
-			$user_session = $tmp[0];
+			$user_session = $tmp[1];
 			setcookie('user_session', $user_session);
 		}
 	}

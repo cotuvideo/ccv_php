@@ -52,7 +52,7 @@ $userid = 0;
 if($user_session !== "")
 {
 	$url = "http://www.nicovideo.jp/my/top";
-	$option = array('http'=>array("method"=>"GET", "header"=>"Content-Type: application/x-www-form-urlencoded\r\nAccept-language: ja\r\nCookie: $user_session\r\n"));
+	$option = array('http'=>array("method"=>"GET", "header"=>"Content-Type: application/x-www-form-urlencoded\r\nAccept-language: ja\r\nCookie: user_session=$user_session\r\n"));
 	$context = stream_context_create($option);
 	$file = file_get_contents($url, false, $context);
 
