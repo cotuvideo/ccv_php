@@ -66,18 +66,11 @@ $fp = fsockopen($addr, $port, $errno, $errstr) or die("fsockopen error");
 stream_set_timeout($fp, 1);
 
 $log = "";
-$res_from = 16;//1000;
-// 166
-// 178
-// 181
-// 192
-// 195
-// 199
-// 204
+$res_from = 1000;
 $when = time();
 $chat = "";
 $buf_no = 0;
-for($i = 0; $i < 16; $i++)
+for($i = 0; $i < 256; $i++)
 {
 	$content = "<thread thread=\"$thread\" version=\"20061206\" res_from=\"-$res_from\" scores=\"1\" when=\"$when\" waybackkey=\"$waybackkey\" user_id=\"$user_id\" />\0";
 	fwrite($fp, $content);
