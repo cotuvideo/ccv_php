@@ -97,6 +97,7 @@ else
 echo "<hr>\n";
 
 echo "<a href=\"/ccv\">top</a>\n";
+echo "<a href=\"/ccv/watch.php\">watch</a>\n";
 
 
 echo "</body>\n";
