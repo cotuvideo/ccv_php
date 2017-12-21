@@ -32,6 +32,7 @@ class reader
 
 function put_comment($str)
 {
+	global $archive;
 	global $line;
 	global $comment_cnt;
 	global $last_no;
@@ -74,7 +75,22 @@ function put_comment($str)
 	}
 	echo sprintf("%4d:%4d:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $user_id, $premium, $anonymity, $text);
 
-	if($no >= $last_res)return true;
+	if($archive == 1)
+	{
+		if($no >= $last_res)
+		{
+			echo "** last_res **\n";
+			return true;
+		}
+	}
+	else
+	{
+		if($premium == 2 && $anonymity == 1 &&  $text == '/disconnect')
+		{
+			echo "** disconnect **\n";
+			return true;
+		}
+	}
 
 	return false;
 }
@@ -160,11 +176,7 @@ function put_comment($str)
 		{
 			$str = $reader->read();
 			$res = put_comment($str);
-			if($res === true)
-			{
-				echo "**** disconnect ****\n";
-				break;
-			}
+			if($res === true)break;
 		}
 	}
 
