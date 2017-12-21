@@ -32,7 +32,7 @@ class reader
 
 function put_comment($str)
 {
-	global $archive;
+	global $start_time, $archive;
 	global $line;
 	global $comment_cnt;
 	global $last_no;
@@ -54,9 +54,15 @@ function put_comment($str)
 	}
 
 	$no        = (int)$xml['no'];
+//	$vpos
+	$date      = (int)$xml['date']-$start_time;
+//	$date_usec
+//	$mail
 	$user_id   = (string)$xml['user_id'];
 	$premium   = (int)$xml['premium'];
 	$anonymity = (int)$xml['anonymity'];
+//	$locale
+//	$score
 	$text      = (string)$xml;
 
 	if($last_no === 0)$last_no = $no-1;
@@ -73,7 +79,8 @@ function put_comment($str)
 	{
 		$comment_no = sprintf("%4d", $comment_cnt++);
 	}
-	echo sprintf("%4d:%4d:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $user_id, $premium, $anonymity, $text);
+	$_date = sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
+	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $user_id, $premium, $anonymity, $text);
 
 	if($archive == 1)
 	{
