@@ -156,10 +156,15 @@ function put_comment($str)
 	{
 		$str = "<thread res_from=\"-1\" version=\"20061206\" scores=\"1\" thread=\"$thread\" />\0";
 		fwrite($fp, $str);
-		for($i = 0; $i < 64; $i++)
+		while(1)
 		{
 			$str = $reader->read();
-			echo "#$str#\n";
+			$res = put_comment($str);
+			if($res === true)
+			{
+				echo "**** disconnect ****\n";
+				break;
+			}
 		}
 	}
 
