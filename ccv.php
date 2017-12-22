@@ -30,6 +30,13 @@ class reader
 	}
 }
 
+function get_time()
+{
+	global $watch_start_time, $watch_seek_time;
+	global $start_time, $end_time;
+	return gmdate("H:i:s", microtime(true)-$watch_start_time+$watch_seek_time).gmdate("/H:i:s", $end_time-$start_time);
+}
+
 function put_comment($str)
 {
 	global $start_time, $archive;
@@ -37,6 +44,7 @@ function put_comment($str)
 	global $comment_cnt;
 	global $last_no;
 	global $last_res;
+	global $watch_start_time, $watch_seek_time;
 
 	$xml = new SimpleXMLElement($str);
 
@@ -45,6 +53,7 @@ function put_comment($str)
 	{
 		$last_res = (int)$xml['last_res'];
 		echo "last_res=$last_res\n";
+		echo get_time()."\r";
 		return false;
 	}
 	if($tagName !== "chat")
@@ -80,7 +89,28 @@ function put_comment($str)
 		$comment_no = sprintf("%4d", $comment_cnt++);
 	}
 	$_date = sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
+	if($archive == 1)
+	{
+		while(1)
+		{
+			$now = (microtime(true)-$watch_start_time+$watch_seek_time);
+			$wait = (float)($date-$now);
+			if($wait <= 0)break;
+			if($wait < 1.0)
+			{
+				usleep($wait*1000000);
+				echo get_time()."\r";
+				break;
+			}
+			usleep(1000000);
+			echo get_time()."\r";
+		}
+	}
 	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $user_id, $premium, $anonymity, $text);
+	if($archive == 1)
+	{
+		echo get_time()."\r";
+	}
 
 	if($archive == 1)
 	{
@@ -110,6 +140,17 @@ function put_comment($str)
 	{
 		echo "getplayerstatus error $id\n";
 		exit(1);
+	}
+
+	$watch_seek_time = 0;
+	if(isset($argv[3]))
+	{
+		$str = explode(':', $argv[3]);
+		$cnt = count($str);
+		$n = 0;
+		if($cnt>=3)$watch_seek_time = $str[$n++];
+		if($cnt>=2)$watch_seek_time = $watch_seek_time*60+$str[$n++];
+		if($cnt>=1)$watch_seek_time = $watch_seek_time*60+$str[$n++];
 	}
 
 	$xml = new SimpleXMLElement($playerstatus);
@@ -164,6 +205,7 @@ function put_comment($str)
 	$reader = new reader;
 	$reader->fp = $fp;
 
+	$watch_start_time = microtime(true);
 	if($archive == 1)
 	{
 		$str = "<thread res_from=\"-1000\" version=\"20061206\" scores=\"1\" thread=\"$thread\" />\0";
