@@ -108,7 +108,14 @@ function put_comment($str)
 			echo get_time()."\r";
 		}
 	}
-	$name = $namedb->getname($user_id, $text);
+	if($premium & 2)
+	{
+		$name = $user_id;
+	}
+	else
+	{
+		$name = $namedb->getname($user_id, $text);
+	}
 	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $name, $premium, $anonymity, $text);
 	if($archive == 1)
 	{
