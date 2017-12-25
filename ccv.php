@@ -2,6 +2,7 @@
 
 require 'define.php';
 require 'getplayerstatus.php';
+require 'namedb.php';
 
 $line = 0;
 $comment_cnt = 0;
@@ -45,6 +46,7 @@ function put_comment($str)
 	global $last_no;
 	global $last_res;
 	global $watch_start_time, $watch_seek_time;
+	global $namedb;
 
 	$xml = new SimpleXMLElement($str);
 
@@ -106,7 +108,8 @@ function put_comment($str)
 			echo get_time()."\r";
 		}
 	}
-	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $user_id, $premium, $anonymity, $text);
+	$name = $namedb->getname($user_id, $text);
+	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $name, $premium, $anonymity, $text);
 	if($archive == 1)
 	{
 		echo get_time()."\r";
@@ -204,6 +207,8 @@ function put_comment($str)
 
 	$reader = new reader;
 	$reader->fp = $fp;
+
+	$namedb = new Namedb($xml->user->user_id, '192.168.0.23', 'nico', '', 'ccv');
 
 	$watch_start_time = microtime(true);
 	if($archive == 1)
