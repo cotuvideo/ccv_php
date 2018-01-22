@@ -116,7 +116,8 @@ function put_comment($str)
 	{
 		$name = $namedb->getname($user_id, $text);
 	}
-	echo sprintf("%4d:%4d:%s:%s:%-27s:%d%d:%s\n", $line++, $no, $comment_no, $_date, $name, $premium, $anonymity, $text);
+	echo sprintf("%4d:%4d:%s:%s:%d%d|%-27s", $line++, $no, $comment_no, $_date, $premium, $anonymity, $name);
+	echo sprintf("\r\033[54C\033[K%s\n", $text);
 	if($archive == 1)
 	{
 		echo get_time()."\r";
