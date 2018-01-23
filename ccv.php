@@ -35,7 +35,12 @@ function get_time()
 {
 	global $watch_start_time, $watch_seek_time;
 	global $start_time, $end_time;
-	return gmdate("H:i:s", microtime(true)-$watch_start_time+$watch_seek_time).gmdate("/H:i:s", $end_time-$start_time);
+	global $watch_count, $comment_count;
+
+	$time = (int)microtime(true)-$watch_start_time+$watch_seek_time;
+	$info = gmdate("H:i:s", $time).gmdate("/H:i:s", $end_time-$start_time);
+	return sprintf("%s w:%4d c:%4d %s", $info, $watch_count, $comment_count, date("m-d H:i:s", $start_time+$time));
+//	return gmdate("H:i:s", microtime(true)-$watch_start_time+$watch_seek_time).gmdate("/H:i:s", $end_time-$start_time);
 }
 
 function put_comment($str)
