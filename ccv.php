@@ -4,6 +4,7 @@ require 'define.php';
 require 'getplayerstatus.php';
 require 'namedb.php';
 
+$auto_get = true;
 $line = 0;
 $comment_cnt = 0;
 $last_no = 0;
@@ -119,7 +120,7 @@ function put_comment($str)
 	}
 	else
 	{
-		$name = $namedb->getname($user_id, $text);
+		$name = $namedb->getname($user_id, $text, $anonymity);
 	}
 	echo sprintf("%4d:%4d:%s:%s:%d%d|%-27s", $line++, $no, $comment_no, $_date, $premium, $anonymity, $name);
 	echo sprintf("\r\033[54C\033[K%s\n", $text);

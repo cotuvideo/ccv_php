@@ -4,6 +4,7 @@ class Namedb
 	public $tb='user';
 	public $user_id;
 	public $mysqli;
+	public $name_array;
 
 	function __construct($user_id, $host, $user, $pass, $db, $port=3306)
 	{
@@ -38,10 +39,13 @@ CREATE TABLE `$user_id`(
 SQL;
 			$result = $this->mysqli->query($query);
 		}
+		$this->name_array = array();
 	}
 
-	function getname($user_id, $comment)
+	function getname($user_id, $comment, $anonymity)
 	{
+		global $auto_get;
+
 		$pos0 = strpos($comment, '@');
 		$pos1 = strpos($comment, '＠');
 		if($pos0 !== false)
@@ -65,6 +69,13 @@ SQL;
 		if(isset($pos))
 		{
 			$name = substr($comment, $pos);
+		}
+		else
+		{
+			if(array_key_exists($user_id, $this->name_array))
+			{
+				return $this->name_array[$user_id];
+			}
 		}
 
 		$query = "SELECT name FROM `$this->user_id` WHERE user_id='$user_id'";
@@ -94,10 +105,29 @@ SQL;
 			}
 			else
 			{
-				return $user_id;
+				if($auto_get === true && $anonymity === 0)
+				{
+					$name = $this->get_thumb_user($user_id);
+				}
+				else
+				{
+					$name = $user_id;
+				}
 			}
 		}
+		$this->name_array[$user_id] = $name;
 		return $name;
+	}
+
+	function get_thumb_user($user_id)
+	{
+		$url = "http://ext.nicovideo.jp/thumb_user/".$user_id;
+		$file = file_get_contents($url);
+		if(preg_match("|<a href=.*<strong>(.*?)</strong>.*</a>|i", $file, $matches) === 1)
+		{
+			return $matches[1];
+		}
+		return $user_id;
 	}
 }
 ?>
