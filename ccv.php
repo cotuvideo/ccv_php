@@ -79,7 +79,7 @@ function put_comment($str)
 	$premium   = (int)$xml['premium'];
 	$anonymity = (int)$xml['anonymity'];
 //	$locale
-//	$score
+	$score     = sprintf("%5s", isset($xml['score']) ? $xml['score'] : '');
 	$text      = (string)$xml;
 
 	if($last_no === 0)$last_no = $no-1;
@@ -122,8 +122,8 @@ function put_comment($str)
 	{
 		$name = $namedb->getname($user_id, $text, $anonymity);
 	}
-	echo sprintf("%4d:%4d:%s:%s:%d%d|%-27s", $line++, $no, $comment_no, $_date, $premium, $anonymity, $name);
-	echo sprintf("\r\033[54C\033[K%s\n", $text);
+	echo sprintf("\033[K%4d:%4d:%s:%s:%d%d|$score|%-27s", $line++, $no, $comment_no, $_date, $premium, $anonymity, $name);
+	echo sprintf("\r\033[62C\033[K%s\n", $text);
 	if($archive == 1)
 	{
 		echo get_time()."\r";
