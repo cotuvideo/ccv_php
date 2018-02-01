@@ -31,9 +31,15 @@ CREATE TABLE `$user_id`(
 	id int(11) NOT NULL AUTO_INCREMENT,
 	timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	enable bool default true,
+	last_member timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	last_visit timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	enable bool NOT NULL DEFAULT true,
 	user_id char(27) NOT NULL,
 	name varchar(255) NOT NULL,
+	community char(10) NOT NULL,
+	visit_count int NOT NULL DEFAULT 0,
+	visit_point int NOT NULL DEFAULT 0,
+	last_lv char(12) NOT NULL,
 	PRIMARY KEY (id, user_id)
 )
 SQL;
