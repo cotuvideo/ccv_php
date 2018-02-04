@@ -32,6 +32,55 @@ class reader
 	}
 }
 
+class Ccv
+{
+	public $no;
+
+	function __construct()
+	{
+		global $watch_start_time, $watch_seek_time;
+
+		$watch_start_time = microtime(true);
+		$watch_seek_time = 0;
+	}
+
+	function get_date($date)
+	{
+		return sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
+	}
+
+	function put_comment($xml, $name, $text)
+	{
+		global $line;
+		global $start_time, $archive;
+		global $comment_cnt;
+
+		$no        = $this->no;
+//		$vpos
+		$date      = $this->get_date((int)$xml['date']-$start_time);
+//		$date_usec
+//		$mail
+		$premium   = (int)$xml['premium'];
+		$anonymity = (int)$xml['anonymity'];
+//		$locale
+		$score     = sprintf("%5s", isset($xml['score']) ? $xml['score'] : '');
+
+		if(($premium&2) !== 0)
+		{
+			$comment_no = '';
+		}
+		else
+		{
+			$comment_no = $comment_cnt++;
+		}
+
+		echo sprintf("\033[K%4d|%4d|%4s|%s|%d%d|%5s|%-27s", $line++, $no, $comment_no, $date, $premium, $anonymity, $score, $name);
+		$pos = 62;
+		echo sprintf("\r\033[%dC\033[K%s\n", $pos, $text);
+		echo get_time()."\r";
+	}
+}
+
 function get_time()
 {
 	global $watch_start_time, $watch_seek_time;
@@ -46,6 +95,7 @@ function get_time()
 
 function put_comment($str)
 {
+	global $ccv;
 	global $start_time, $archive;
 	global $line;
 	global $comment_cnt;
@@ -71,32 +121,19 @@ function put_comment($str)
 	}
 
 	$no        = (int)$xml['no'];
-//	$vpos
 	$date      = (int)$xml['date']-$start_time;
-//	$date_usec
-//	$mail
 	$user_id   = (string)$xml['user_id'];
 	$premium   = (int)$xml['premium'];
 	$anonymity = (int)$xml['anonymity'];
-//	$locale
-	$score     = sprintf("%5s", isset($xml['score']) ? $xml['score'] : '');
 	$text      = (string)$xml;
 
 	if($last_no === 0)$last_no = $no-1;
 	while(++$last_no < $no)
 	{
-		echo sprintf("%4d:%4d:%4d:ng commnet\n", $line++, $last_no, $comment_cnt++);
+		$ccv->no = $last_no;
+		$ccv->put_comment($xml, '', "\033[31mng commnet\033[m");
 	}
 
-	if(($premium&2) !== 0)
-	{
-		$comment_no = "    ";
-	}
-	else
-	{
-		$comment_no = sprintf("%4d", $comment_cnt++);
-	}
-	$_date = sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
 	if($archive == 1)
 	{
 		while(1)
@@ -122,12 +159,8 @@ function put_comment($str)
 	{
 		$name = $namedb->getname($user_id, $text, $anonymity);
 	}
-	echo sprintf("\033[K%4d:%4d:%s:%s:%d%d|$score|%-27s", $line++, $no, $comment_no, $_date, $premium, $anonymity, $name);
-	echo sprintf("\r\033[62C\033[K%s\n", $text);
-	if($archive == 1)
-	{
-		echo get_time()."\r";
-	}
+	$ccv->no = $no;
+	$ccv->put_comment($xml, $name, $text);
 
 	if($archive == 1)
 	{
@@ -150,6 +183,7 @@ function put_comment($str)
 }
 
 	if(count($argv) < 3)exit;
+	$ccv = new Ccv();
 	$id = $argv[1];
 
 	$playerstatus = getplayerstatus($id, $argv[2]);
@@ -159,7 +193,6 @@ function put_comment($str)
 		exit(1);
 	}
 
-	$watch_seek_time = 0;
 	if(isset($argv[3]))
 	{
 		$str = explode(':', $argv[3]);
@@ -224,7 +257,6 @@ function put_comment($str)
 
 	$namedb = new Namedb($xml->user->user_id, '192.168.0.23', 'nico', '', 'ccv');
 
-	$watch_start_time = microtime(true);
 	if($archive == 1)
 	{
 		$str = "<thread res_from=\"-1000\" version=\"20061206\" scores=\"1\" thread=\"$thread\" />\0";
