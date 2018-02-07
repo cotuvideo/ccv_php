@@ -4,7 +4,6 @@ require 'define.php';
 require 'getplayerstatus.php';
 require 'namedb.php';
 
-$auto_get = true;
 $line = 0;
 $comment_cnt = 0;
 $last_no = 0;
@@ -51,6 +50,7 @@ class Ccv
 
 	function put_comment($xml, $name, $text)
 	{
+		global $namedb;
 		global $line;
 		global $start_time, $archive;
 		global $comment_cnt;
@@ -65,6 +65,10 @@ class Ccv
 //		$locale
 		$score     = sprintf("%5s", isset($xml['score']) ? $xml['score'] : '');
 
+		$c_count = $namedb->comment_count;
+		$v_count = $namedb->visit_count;
+		$v_point = $namedb->visit_point;
+
 		if(($premium&2) !== 0)
 		{
 			$comment_no = '';
@@ -74,8 +78,8 @@ class Ccv
 			$comment_no = $comment_cnt++;
 		}
 
-		echo sprintf("\033[K%4d|%4d|%4s|%s|%d%d|%5s|%-27s", $line++, $no, $comment_no, $date, $premium, $anonymity, $score, $name);
-		$pos = 62;
+		echo sprintf("\033[K%4d|%4d|%4s|%s|%d%d|%5s|%3s|%3s|%3s|%-27s", $line++, $no, $comment_no, $date, $premium, $anonymity, $score, $c_count, $v_count, $v_point, $name);
+		$pos = 62+11;
 		echo sprintf("\r\033[%dC\033[K%s\n", $pos, $text);
 		echo get_time()."\r";
 	}
@@ -90,7 +94,6 @@ function get_time()
 	$time = (int)microtime(true)-$watch_start_time+$watch_seek_time;
 	$info = gmdate("H:i:s", $time).gmdate("/H:i:s", $end_time-$start_time);
 	return sprintf("%s w:%4d c:%4d %s", $info, $watch_count, $comment_count, date("m-d H:i:s", $start_time+$time));
-//	return gmdate("H:i:s", microtime(true)-$watch_start_time+$watch_seek_time).gmdate("/H:i:s", $end_time-$start_time);
 }
 
 function put_comment($str)
@@ -127,6 +130,10 @@ function put_comment($str)
 	$anonymity = (int)$xml['anonymity'];
 	$text      = (string)$xml;
 
+	$namedb->comment_count = '';
+	$namedb->visit_count = '';
+	$namedb->visit_point = '';
+
 	if($last_no === 0)$last_no = $no-1;
 	while(++$last_no < $no)
 	{
@@ -157,7 +164,7 @@ function put_comment($str)
 	}
 	else
 	{
-		$name = $namedb->getname($user_id, $text, $anonymity);
+		$name = $namedb->getname($xml, $user_id, $text);
 	}
 	$ccv->no = $no;
 	$ccv->put_comment($xml, $name, $text);
@@ -166,7 +173,7 @@ function put_comment($str)
 	{
 		if($no >= $last_res)
 		{
-			echo "** last_res **\n";
+			echo "\n** last_res **\n";
 			return true;
 		}
 	}
@@ -174,7 +181,7 @@ function put_comment($str)
 	{
 		if($premium == 2 && $anonymity == 1 &&  $text == '/disconnect')
 		{
-			echo "** disconnect **\n";
+			echo "\n** disconnect **\n";
 			return true;
 		}
 	}
@@ -255,7 +262,7 @@ function put_comment($str)
 	$reader = new reader;
 	$reader->fp = $fp;
 
-	$namedb = new Namedb($xml->user->user_id, '192.168.0.23', 'nico', '', 'ccv');
+	$namedb = new Namedb($id, $co, $xml->user->user_id, DB_HOST, 'nico', '', 'ccv', DB_PORT);
 
 	if($archive == 1)
 	{

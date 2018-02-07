@@ -1,13 +1,20 @@
 <?php
 class Namedb
 {
+	public $lv;
+	public $co;
 	public $tb='user';
 	public $user_id;
 	public $mysqli;
 	public $name_array;
+	public $comment_count;
+	public $visit_count;
+	public $visit_point;
 
-	function __construct($user_id, $host, $user, $pass, $db, $port=3306)
+	function __construct($lv, $co, $user_id, $host, $user, $pass, $db, $port=3306)
 	{
+		$this->lv = $lv;
+		$this->co = $co;
 		$this->user_id = $user_id;
 		$this->mysqli = new mysqli($host, $user, $pass, $db, $port);
 		if($this->mysqli->connect_errno)
@@ -37,7 +44,8 @@ CREATE TABLE `$user_id`(
 	user_id char(27) NOT NULL,
 	name varchar(255) NOT NULL,
 	community char(10) NOT NULL,
-	visit_count int NOT NULL DEFAULT 0,
+	comment_count int NOT NULL DEFAULT 1,
+	visit_count int NOT NULL DEFAULT 1,
 	visit_point int NOT NULL DEFAULT 0,
 	last_lv char(12) NOT NULL,
 	PRIMARY KEY (id, user_id)
@@ -48,9 +56,11 @@ SQL;
 		$this->name_array = array();
 	}
 
-	function getname($user_id, $comment, $anonymity)
+	function getname(&$xml, $user_id, $comment)
 	{
-		global $auto_get;
+		$premium   = (int)$xml['premium'];
+		$anonymity = (int)$xml['anonymity'];
+		$score     = (int)isset($xml['score']) ? $xml['score'] : 0;
 
 		$pos0 = strpos($comment, '@');
 		$pos1 = strpos($comment, '＠');
@@ -76,42 +86,67 @@ SQL;
 		{
 			$name = substr($comment, $pos);
 		}
-		else
-		{
-			if(array_key_exists($user_id, $this->name_array))
-			{
-				return $this->name_array[$user_id];
-			}
-		}
 
-		$query = "SELECT name FROM `$this->user_id` WHERE user_id='$user_id'";
+		$query = "SELECT * FROM `$this->user_id` WHERE user_id='$user_id'";
 		$result = $this->mysqli->query($query);
 		if($result === false)
 		{
-			return "** error **";
+			exit("\n$query\n".$this->mysqli->error."\n");
 		}
-		if($row = $result->fetch_row())
+		if($row = $result->fetch_assoc())
 		{
+			$last_lv = $row['last_lv'];
+			$this->comment_count = $row['comment_count']+1;
+			$this->visit_count = $row['visit_count'];
+			$this->visit_point = $row['visit_point'];
+			$set = "comment_count=$this->comment_count";
+			if($last_lv != $this->lv)
+			{
+				$this->visit_count++;
+				if($score == 0)
+				{
+					$point = ($premium === 1) ? 2 : 1;
+					$this->visit_point += $point;
+					$set .= ",visit_count=$this->visit_count,visit_point=$this->visit_point";
+				}
+				else
+				{
+					$point = 0;
+				}
+				$set .= ",last_lv='$this->lv'";
+			}
 			if(isset($name))
 			{
-				$query = "UPDATE `$user_id` SET name='$name' WHERE user_id='$user_id'";
-				$result = $this->mysqli->query($query);
+				$set .= ",name='$name'";
 			}
 			else
 			{
-				$name = $row[0];
+				$name = $row['name'];
 			}
+			$query = "UPDATE `$this->user_id` SET $set WHERE user_id='$user_id'";
+			$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
 		}
 		else
 		{
 			if(isset($name))
 			{
-				$query = "INSERT INTO `$this->user_id`(user_id,name) VALUES('$user_id','$name')";
-				$result = $this->mysqli->query($query);
+				if($score == 0)
+				{
+					$point = ($premium === 1) ? 2 : 1;
+				}
+				else
+				{
+					$point = 0;
+				}
+				$this->comment_count = 1;
+				$this->visit_count = 1;
+				$this->visit_point = $point;
+				$query = "INSERT INTO `$this->user_id`(user_id,name,community,visit_point,last_lv) VALUES('$user_id','$name', '$this->co', $point, '$this->lv')";
+				$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
 			}
 			else
 			{
-				if($auto_get === true && $anonymity === 0)
+				if(defined('AUTOGET') && $anonymity === 0)
 				{
 					$name = $this->get_thumb_user($user_id);
 				}
@@ -121,7 +156,7 @@ SQL;
 				}
 			}
 		}
-		$this->name_array[$user_id] = $name;
+
 		return $name;
 	}
 
