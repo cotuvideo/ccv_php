@@ -146,7 +146,7 @@ SQL;
 			}
 			else
 			{
-				if(defined('AUTOGET') && $anonymity === 0)
+				if(AUTOGET === true && $anonymity === 0)
 				{
 					$name = $this->get_thumb_user($user_id);
 				}
