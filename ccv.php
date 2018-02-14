@@ -193,7 +193,8 @@ function put_comment($str)
 	$ccv = new Ccv();
 	$id = $argv[1];
 
-	$playerstatus = getplayerstatus($id, $argv[2]);
+	$user_session = $argv[2];
+	$playerstatus = getplayerstatus($id, $user_session);
 	if($playerstatus === false)
 	{
 		echo "getplayerstatus error $id\n";
@@ -231,6 +232,8 @@ function put_comment($str)
 	$end_time      = (int)$xml->stream->end_time;
 	$archive       = (int)$xml->stream->archive;
 
+	$user_id = (int)$xml->user->user_id;
+
 	$addr   = (string)$xml->ms->addr;
 	$port   = (int)$xml->ms->port;
 	$thread = (int)$xml->ms->thread;
@@ -240,7 +243,7 @@ function put_comment($str)
 	echo "$description\n";
 	echo "$provider_type\n";
 	echo $xml->stream->owner_name."\n";
-	echo $xml->user->nickname."(".$xml->user->user_id.")\n";
+	echo $xml->user->nickname."($user_id)\n";
 	echo "addr:[$addr:$port] thread:[$thread]\n";
 	echo "watch_count  :".$watch_count."\n";
 	echo "comment_count:".$comment_count."\n";
@@ -264,15 +267,73 @@ function put_comment($str)
 
 	$namedb = new Namedb($id, $co, $xml->user->user_id, DB_HOST, 'nico', '', 'ccv', DB_PORT);
 
+	$log = "";
 	if($archive == 1)
 	{
-		$str = "<thread res_from=\"-1000\" version=\"20061206\" scores=\"1\" thread=\"$thread\" />\0";
-		fwrite($fp, $str);
+		$options = array('http'=>array('method'=>"GET", 'header'=>"Accept-language: ja\r\n"."Cookie: user_session=$user_session\r\n"));
+		$context = stream_context_create($options);
+		$url = "http://watch.live.nicovideo.jp/api/getwaybackkey?thread=$thread";
+		$file = file_get_contents($url, false, $context) or die("read error $url");
+		$a = explode("=", $file);
+		$waybackkey = $a[1];
+
+		$res_from = 1000;
+		$when = time();
+		$buf_no = 0;
 		while(1)
 		{
-			$str = $reader->read();
-			$res = put_comment($str);
-			if($res === true)break;
+			$content = "<thread thread=\"$thread\" waybackkey=\"$waybackkey\" user_id=\"$user_id\" version=\"20061206\" res_from=\"-$res_from\" scores=\"1\" when=\"$when\" />\0";
+			fwrite($fp, $content);
+			$res = "";
+			while(1)
+			{
+				$res .= fread($fp, 4096);
+				$info = stream_get_meta_data($fp);
+				if(substr($res, -1) == "\0")
+				{
+				//	echo sprintf("read:%4d timed_out:%d\n", strlen($res), (int)$info['timed_out']);
+					$xml = simplexml_load_string("<?xml version='1.0'?><root>".str_replace("\0", "\n", $res)."</root>");
+					if($xml === false)
+					{
+						exit("**** xml error ****\n");
+					}
+					$last_res = (int)$xml->thread['last_res'];
+					$no0 = (int)$xml->chat[0]['no'];
+					$count = (int)$xml->chat->count();
+					if($last_res === (int)$xml->chat[$count-1]['no'])
+					{
+						break;
+					}
+					if($info['timed_out'])
+					{
+						$res .= '<chat thread="1621188173" no="2290" vpos="275600" date="1518089305" date_usec="847406" user_id="1" premium="1">xxxxxxxxxx</chat>'."0";
+						echo "time out\n";
+						break;
+					}
+				}
+				if($info['timed_out'])
+				{
+					exit("**** time out ****\n");
+				}
+			}
+			$data[$buf_no++] = $res;
+			$when = (int)$xml->chat[0]['date'];
+			$log .= "when=$when no=$no0\n";
+//			file_put_contents("./tmp/$v.xml", $data[0]);
+			if($no0 == 1)break;
+		}
+		while($buf_no > 0)
+		{
+			$buf = $data[--$buf_no];
+			while(1)
+			{
+				$z = strpos($buf, "\0");
+				if($z === false)break;
+				$str = substr($buf, 0, $z+1);
+				$buf = substr($buf, $z+1);
+				$res = put_comment($str);
+				if($res === true)break;
+			}
 		}
 	}
 	else
