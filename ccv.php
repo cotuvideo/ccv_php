@@ -140,6 +140,10 @@ function put_comment($str)
 		$ccv->no = $last_no;
 		$ccv->put_comment($xml, '', "\033[31mng commnet\033[m");
 	}
+	if(($premium&2) !== 0 && substr($text, 0, 12) == '/hb ifseetno')
+	{
+		return false;
+	}
 
 	if($archive == 1)
 	{
