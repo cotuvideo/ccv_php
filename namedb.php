@@ -84,7 +84,10 @@ SQL;
 		}
 		if(isset($pos))
 		{
-			$name = substr($comment, $pos);
+			if(strpos("01234567889０１２３４５６７８９", substr($comment, $pos, 1)) == false)
+			{
+				$name = substr($comment, $pos);
+			}
 		}
 
 		$query = "SELECT * FROM `$this->user_id` WHERE user_id='$user_id'";
