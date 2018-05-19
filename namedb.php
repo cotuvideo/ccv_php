@@ -90,7 +90,7 @@ SQL;
 			}
 		}
 
-		$query = "SELECT * FROM `$this->user_id` WHERE user_id='$user_id'";
+		$query = "SELECT * FROM `$this->user_id` WHERE user_id='$user_id' AND community='$this->co'";
 		$result = $this->mysqli->query($query);
 		if($result === false)
 		{
@@ -126,11 +126,22 @@ SQL;
 			{
 				$name = $row['name'];
 			}
-			$query = "UPDATE `$this->user_id` SET $set WHERE user_id='$user_id'";
+			$id = $row['id'];
+			$query = "UPDATE `$this->user_id` SET $set WHERE id='$id'";
 			$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
 		}
 		else
 		{
+			$query = "SELECT name FROM `$this->user_id` WHERE user_id='$user_id'";
+			$result = $this->mysqli->query($query);
+			if($result === false)
+			{
+				exit("\n$query\n".$this->mysqli->error."\n");
+			}
+			if($row = $result->fetch_assoc())
+			{
+				$name = $row['name'];
+			}
 			if(isset($name))
 			{
 				if($score == 0)
