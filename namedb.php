@@ -21,7 +21,7 @@ class Namedb
 		{
 			die($this->mysqli->connect_error());
 		}
-		$this->mysqli->set_charset("utf8") || die($mysqli->connect_error());
+		$this->mysqli->set_charset("utf8mb4") || die($mysqli->connect_error());
 
 		$query = "SELECT * FROM $this->tb WHERE user_id=$user_id";
 		$result = $this->mysqli->query($query);
@@ -49,7 +49,7 @@ CREATE TABLE `$user_id`(
 	visit_point int NOT NULL DEFAULT 0,
 	last_lv char(12) NOT NULL,
 	PRIMARY KEY (id, user_id)
-)
+) DEFAULT CHARSET=utf8mb4
 SQL;
 			$result = $this->mysqli->query($query);
 		}
