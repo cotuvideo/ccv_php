@@ -10,6 +10,13 @@ $last_no = 0;
 
 $last_res = 0;
 
+function getnow()
+{
+	global $watch_start_time, $watch_seek_time;
+	global $spd;
+	return (microtime(true)-$watch_start_time)*$spd/4+$watch_seek_time;
+}
+
 class reader
 {
 	public $fp;
@@ -91,7 +98,7 @@ function get_time()
 	global $start_time, $end_time;
 	global $watch_count, $comment_count;
 
-	$time = (int)microtime(true)-$watch_start_time+$watch_seek_time;
+	$time = (int)getnow();
 	$info = gmdate("H:i:s", $time).gmdate("/H:i:s", $end_time-$start_time);
 	return sprintf("%s w:%4d c:%4d %s", $info, $watch_count, $comment_count, date("m-d H:i:s", $start_time+$time));
 }
@@ -149,8 +156,7 @@ function put_comment($str)
 	{
 		while(1)
 		{
-			$now = (microtime(true)-$watch_start_time+$watch_seek_time);
-			$wait = (float)($date-$now);
+			$wait = (float)($date-getnow());
 			if($wait <= 0)break;
 			if($wait < 1.0)
 			{

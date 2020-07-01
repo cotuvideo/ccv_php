@@ -8,5 +8,6 @@ $user = 'user';
 $pass = '';
 $db = 'db';
 $tb = 'tb';
+$spd = 5;
 
 ?>
