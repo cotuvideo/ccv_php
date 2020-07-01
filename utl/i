@@ -1,0 +1,20 @@
+databases=`mysql -unico -N -e "show databases"`
+for db in ${databases[@]}; do
+	echo "====[$db]"
+	if [ $db = "information_schema" ]; then
+		continue
+	fi
+	if [ $db = "mysql" ]; then
+		continue
+	fi
+	if [ $db = "performance_schema" ]; then
+		continue
+	fi
+	if [ $db = "sys" ]; then
+		continue
+	fi
+	tables=`mysql -unico ${db} -N -e 'show tables'`
+	for tb in ${tables[@]}; do
+		echo "$db.$tb"
+	done
+done
