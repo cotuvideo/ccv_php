@@ -51,7 +51,7 @@ $nickname = "";
 $userid = 0;
 if($user_session !== "")
 {
-	$url = "http://www.nicovideo.jp/my/top";
+	$url = "https://www.nicovideo.jp/my/top";
 	$option = array('http'=>array("method"=>"GET", "header"=>"Content-Type: application/x-www-form-urlencoded\r\nAccept-language: ja\r\nCookie: user_session=$user_session\r\n"));
 	$context = stream_context_create($option);
 	$file = file_get_contents($url, false, $context);
@@ -62,7 +62,7 @@ if($user_session !== "")
 		$nickname = $res[1];
 	}
 
-	preg_match("/data-nico-userId=\"(\d*)\"/i", $file, $res);
+	preg_match("/var\sUser\s=\s{\sid:\s(\d*),.+?};/i", $file, $res);
 	if(count($res) >= 2)
 	{
 		$userid = $res[1];
