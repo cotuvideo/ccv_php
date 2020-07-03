@@ -85,8 +85,10 @@ class Ccv
 			$comment_no = $comment_cnt++;
 		}
 
-		echo sprintf("\033[K%4d|%4d|%4s|%s|%d%d|%5s|%3s|%3s|%3s|%-27s", $line++, $no, $comment_no, $date, $premium, $anonymity, $score, $c_count, $v_count, $v_point, $name);
-		$pos = 62+11;
+		$p = ($premium >= 0 && $premium <= 3) ? substr(' pox', $premium, 1) : '*';
+		$a = ($anonymity >= 0 && $anonymity <= 1) ? substr(' a', $anonymity, 1) : '*';
+		echo sprintf("\033[K%4d|%4d|%4s|%s|%s%s|%6s|%4s|%3s|%3s|%-27s", $line++, $no, $comment_no, $date, $p, $a, $score, $c_count, $v_count, $v_point, $name);
+		$pos = 63+11;
 		echo sprintf("\r\033[%dC\033[K%s\n", $pos, $text);
 		echo get_time()."\r";
 	}
