@@ -25,7 +25,7 @@ date_default_timezone_set('Asia/Tokyo');
 
 $options = array('http'=>array('method'=>"GET", 'header'=>"Accept-language: ja\r\n"."Cookie: user_session=$user_session\r\n"));
 $context = stream_context_create($options);
-$url = "http://live.nicovideo.jp/api/getplayerstatus?v=$v";
+$url = "https://live.nicovideo.jp/api/getplayerstatus?v=$v";
 $file = file_get_contents($url, false, $context) or die("read error $url");
 $xml = simplexml_load_string($file);
 $status = $xml['status'];
@@ -53,7 +53,7 @@ $thread = (int)$xml->ms->thread;
 
 $options = array('http'=>array('method'=>"GET", 'header'=>"Accept-language: ja\r\n"."Cookie: user_session=$user_session\r\n"));
 $context = stream_context_create($options);
-$url = "http://watch.live.nicovideo.jp/api/getwaybackkey?thread=$thread";
+$url = "https://watch.live.nicovideo.jp/api/getwaybackkey?thread=$thread";
 $file = file_get_contents($url, false, $context) or die("read error $url");
 $a = explode("=", $file);
 $waybackkey = $a[1];
@@ -260,7 +260,7 @@ while($buf_no > 0)
 	//		echo "<td align=\"right\">$score</td>\n";
 		if($anonymity === 0)
 		{
-			echo "<td><a href=\"http://www.nicovideo.jp/user/$user_id\" target=\"_blank\">$name</a></td>\n";
+			echo "<td><a href=\"https://www.nicovideo.jp/user/$user_id\" target=\"_blank\">$name</a></td>\n";
 		}
 		else
 		{

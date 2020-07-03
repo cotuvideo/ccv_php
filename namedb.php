@@ -176,7 +176,7 @@ SQL;
 
 	function get_thumb_user($user_id)
 	{
-		$url = "http://ext.nicovideo.jp/thumb_user/".$user_id;
+		$url = "https://ext.nicovideo.jp/thumb_user/".$user_id;
 		$file = file_get_contents($url);
 		if(preg_match("|<a href=.*<strong>(.*?)</strong>.*</a>|i", $file, $matches) === 1)
 		{

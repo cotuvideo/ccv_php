@@ -284,7 +284,7 @@ function put_comment($str)
 	{
 		$options = array('http'=>array('method'=>"GET", 'header'=>"Accept-language: ja\r\n"."Cookie: user_session=$user_session\r\n"));
 		$context = stream_context_create($options);
-		$url = "http://watch.live.nicovideo.jp/api/getwaybackkey?thread=$thread";
+		$url = "https://watch.live.nicovideo.jp/api/getwaybackkey?thread=$thread";
 		$file = file_get_contents($url, false, $context) or die("read error $url");
 		$a = explode("=", $file);
 		$waybackkey = $a[1];
