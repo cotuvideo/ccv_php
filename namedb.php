@@ -3,7 +3,7 @@ class Namedb
 {
 	public $lv;
 	public $co;
-	public $tb='user';
+	public $tb;
 	public $user_id;
 	public $mysqli;
 	public $name_array;
@@ -11,8 +11,9 @@ class Namedb
 	public $visit_count;
 	public $visit_point;
 
-	function __construct($lv, $co, $user_id, $host, $user, $pass, $db, $port=3306)
+	function __construct($lv, $co, $user_id, $nickname, $host, $user, $pass, $db, $port=3306)
 	{
+		$this->tb = getenv("CCV_TB_MEMBER");
 		$this->lv = $lv;
 		$this->co = $co;
 		$this->user_id = $user_id;
@@ -25,14 +26,51 @@ class Namedb
 
 		$query = "SELECT * FROM $this->tb WHERE user_id=$user_id";
 		$result = $this->mysqli->query($query);
+		if($result === false)
+		{
+			exit("$query\n".$this->mysqli->error."\n");
+		}
 		if($row = $result->fetch_row())
 		{
 			echo "#[$user_id] id:".$row[0]."\n";
 		}
 		else
 		{
-			$query = "INSERT INTO $this->tb(user_id) VALUES($user_id)";
+			$len = mb_strlen($nickname);
+			$user_name = '';
+			for($i = 0; $i < $len; $i++)
+			{
+				$c = mb_substr($nickname, $i, 1);
+				switch($c)
+				{
+				case "\\":
+					$user_name .= "\\\\";
+					break;
+				case "'":
+					$user_name .= "\'";
+					break;
+				default:
+					$user_name .= $c;
+					break;
+				}
+			}
+			$now = time();
+			$query = "INSERT INTO $this->tb(user_id, user_name, count, rank, created_at, updated_at) VALUES($user_id, '$user_name', 0, 0, $now, $now)";
 			$result = $this->mysqli->query($query);
+			if($result === false)
+			{
+				exit("$query\n".$this->mysqli->error."\n");
+			}
+		}
+
+		$query = "show tables like '$user_id'";
+		$result = $this->mysqli->query($query);
+		if($result === false)
+		{
+			exit("$query\n".$this->mysqli->error."\n");
+		}
+		if($result->num_rows === 0)
+		{
 			$query = <<<SQL
 CREATE TABLE `$user_id`(
 	id int(11) NOT NULL AUTO_INCREMENT,
@@ -40,10 +78,10 @@ CREATE TABLE `$user_id`(
 	create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	last_member timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	last_visit timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	enable bool NOT NULL DEFAULT true,
 	user_id char(27) NOT NULL,
-	name varchar(255) NOT NULL,
 	community char(10) NOT NULL,
+	enable bool NOT NULL DEFAULT true,
+	name varchar(255) NOT NULL,
 	comment_count int NOT NULL DEFAULT 1,
 	visit_count int NOT NULL DEFAULT 1,
 	visit_point int NOT NULL DEFAULT 0,
@@ -52,6 +90,29 @@ CREATE TABLE `$user_id`(
 ) DEFAULT CHARSET=utf8mb4
 SQL;
 			$result = $this->mysqli->query($query);
+			if($result === false)
+			{
+				exit("$query\n".$this->mysqli->error."\n");
+			}
+
+			$query = <<<SQL
+ALTER TABLE `$user_id`
+	drop last_member,
+	drop last_visit,
+	modify user_id varchar(27) not null,
+	modify community varchar(10) not null,
+	modify last_lv varchar(12) not null,
+	add anonymity bool NOT NULL DEFAULT false after enable,
+	add created_at int unsigned NOT NULL DEFAULT 0,
+	add updated_at int unsigned NOT NULL DEFAULT 0,
+	DROP PRIMARY KEY, ADD PRIMARY KEY (id),
+	ADD UNIQUE INDEX (user_id, community)
+SQL;
+			$result = $this->mysqli->query($query);
+			if($result === false)
+			{
+				exit("$query\n".$this->mysqli->error."\n");
+			}
 		}
 		$this->name_array = array();
 	}

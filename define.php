@@ -2,12 +2,11 @@
 
 define('DEBUG', false);
 define('AUTOGET', false);
-define('DB_HOST', 'localhost');
-define('DB_PORT', 3306);
-$user = 'user';
-$pass = '';
-$db = 'db';
-$tb = 'tb';
-$spd = 5;
+define('DB_HOST', getenv("CCV_HOST"));
+define('DB_PORT', getenv("CCV_PORT"));
+$user = getenv("CCV_USER");
+$pass = getenv("CCV_PASS");
+$db = getenv("CCV_DB");
+$spd = 4;
 
 ?>

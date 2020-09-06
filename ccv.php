@@ -201,6 +201,8 @@ function put_comment($str)
 	return false;
 }
 
+	date_default_timezone_set('Asia/Tokyo');
+
 	if(count($argv) < 3)exit;
 	$ccv = new Ccv();
 	$id = $argv[1];
@@ -277,7 +279,7 @@ function put_comment($str)
 	$reader = new reader;
 	$reader->fp = $fp;
 
-	$namedb = new Namedb($id, $co, $xml->user->user_id, DB_HOST, 'nico', '', 'ccv', DB_PORT);
+	$namedb = new Namedb($id, $co, $xml->user->user_id, $xml->user->nickname, DB_HOST, $user, $pass, $db, DB_PORT);
 
 	$log = "";
 	if($archive == 1)
