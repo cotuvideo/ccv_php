@@ -55,7 +55,7 @@ class Ccv
 		return sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
 	}
 
-	function put_comment($xml, $name, $text)
+	function put_comment($xml, $name, $text, $col=0)
 	{
 		global $namedb;
 		global $line;
@@ -89,7 +89,14 @@ class Ccv
 		$a = ($anonymity >= 0 && $anonymity <= 1) ? substr(' a', $anonymity, 1) : '*';
 		echo sprintf("\033[K%4d|%4d|%4s|%s|%s%s|%6s|%4s|%3s|%3s|%-27s", $line++, $no, $comment_no, $date, $p, $a, $score, $c_count, $v_count, $v_point, $name);
 		$pos = 63+11;
-		echo sprintf("\r\033[%dC\033[K%s\n", $pos, $text);
+		if($col === 0)
+		{
+			echo sprintf("\r\033[%dC\033[K%s\n", $pos, $text);
+		}
+		else
+		{
+			echo sprintf("\r\033[%dC\033[K\033[%dm%s\033[m\n", $pos, $col, $text);
+		}
 		echo get_time()."\r";
 	}
 }
@@ -170,16 +177,36 @@ function put_comment($str)
 			echo get_time()."\r";
 		}
 	}
-	if($premium & 2)
+	$col = 0;
+	if($premium === 2 || ($premium === 3 && $user_id === '900000000'))
 	{
 		$name = $user_id;
 	}
 	else
 	{
-		$name = $namedb->getname($xml, $user_id, $text);
+		if($premium === 3)
+		{
+			$col = OWNERCOLOR;
+			if($anonymity == 0)
+			{
+				$name = "放送者($user_id)";
+			}
+			else
+			{
+				$name = $user_id;
+			}
+		}
+		else
+		{
+			if($namedb->isfirst($user_id))
+			{
+				$col = FIRSTCOLOR;
+			}
+			$name = $namedb->getname($xml, $user_id, $text);
+		}
 	}
 	$ccv->no = $no;
-	$ccv->put_comment($xml, $name, $text);
+	$ccv->put_comment($xml, $name, $text, $col);
 
 	if($archive == 1)
 	{

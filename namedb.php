@@ -257,6 +257,11 @@ SQL;
 		return $name;
 	}
 
+	function isfirst($user_id)
+	{
+		return !isset($this->name_array[$user_id]);
+	}
+
 	function get_thumb_user($user_id)
 	{
 		$url = "https://ext.nicovideo.jp/thumb_user/".$user_id;
