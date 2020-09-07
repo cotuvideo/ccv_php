@@ -2,6 +2,7 @@
 
 define('DEBUG', false);
 define('AUTOGET', false);
+define('AUTONAME', true);
 define('DB_HOST', getenv("CCV_HOST"));
 define('DB_PORT', getenv("CCV_PORT"));
 $user = getenv("CCV_USER");

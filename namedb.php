@@ -216,7 +216,7 @@ SQL;
 				$this->comment_count = 1;
 				$this->visit_count = 1;
 				$this->visit_point = $point;
-				$query = "INSERT INTO `$this->user_id`(user_id,name,community,visit_point,last_lv) VALUES('$user_id','$name', '$this->co', $point, '$this->lv')";
+				$query = "INSERT INTO `$this->user_id`(user_id, community, anonymity, name, visit_point, last_lv) VALUES('$user_id', '$this->co', $anonymity, '$name', $point, '$this->lv')";
 				$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
 			}
 			else
@@ -227,11 +227,33 @@ SQL;
 				}
 				else
 				{
-					$name = $user_id;
+					if(AUTONAME === true)
+					{
+						if(isset($this->name_array[$user_id]))
+						{
+							$name = $this->name_array[$user_id];
+						}
+						else
+						{
+							if(isset($xml['no']))
+							{
+								$name = $xml['no']." ｺﾒ";
+							}
+							else
+							{
+								$name = $user_id;
+							}
+						}
+					}
+					else
+					{
+						$name = $user_id;
+					}
 				}
 			}
 		}
 
+		$this->name_array[$user_id] = $name;
 		return $name;
 	}
 
