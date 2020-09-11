@@ -117,6 +117,39 @@ SQL;
 		$this->name_array = array();
 	}
 
+	function addpoint($user_id, $premium, $anonymity, $score)
+	{
+		if($score !== 0)
+		{
+			return false;
+		}
+
+		$point = ($premium === 1) ? 2 : 1;
+		for($i = 1; $i < 8; $i++)
+		{
+			if($this->visit_point < 1<<($i*4))
+			{
+				$point *= $i;
+				break;
+			}
+		}
+		if($anonymity == 0)
+		{
+			$query = "SELECT rank FROM ".TB_MEMBER." WHERE user_id=$user_id";
+			$result = $this->mysqli->query($query);
+			if($result !== false)
+			{
+				if($row = $result->fetch_assoc())
+				{
+					$rank = (int)$row['rank'];
+					$point <<= $rank;
+				}
+			}
+		}
+		$this->visit_point += $point;
+		return true;
+	}
+
 	function getname(&$xml, $user_id, $comment)
 	{
 		$premium   = (int)$xml['premium'];
@@ -167,17 +200,11 @@ SQL;
 			if($last_lv != $this->lv)
 			{
 				$this->visit_count++;
-				if($score == 0)
+				$set .= ",visit_count=$this->visit_count,last_lv='$this->lv'";
+				if($this->addpoint($user_id, $premium, $anonymity, $score))
 				{
-					$point = ($premium === 1) ? 2 : 1;
-					$this->visit_point += $point;
-					$set .= ",visit_count=$this->visit_count,visit_point=$this->visit_point";
+					$set .= ",visit_point=$this->visit_point";
 				}
-				else
-				{
-					$point = 0;
-				}
-				$set .= ",last_lv='$this->lv'";
 			}
 			if(isset($name))
 			{
@@ -205,18 +232,11 @@ SQL;
 			}
 			if(isset($name))
 			{
-				if($score == 0)
-				{
-					$point = ($premium === 1) ? 2 : 1;
-				}
-				else
-				{
-					$point = 0;
-				}
 				$this->comment_count = 1;
 				$this->visit_count = 1;
-				$this->visit_point = $point;
-				$query = "INSERT INTO `$this->user_id`(user_id, community, anonymity, name, visit_point, last_lv) VALUES('$user_id', '$this->co', $anonymity, '$name', $point, '$this->lv')";
+				$this->visit_point = 0;
+				$this->addpoint($user_id, $premium, $anonymity, $score);
+				$query = "INSERT INTO `$this->user_id`(user_id, community, anonymity, name, visit_point, last_lv) VALUES('$user_id', '$this->co', $anonymity, '$name', $this->visit_point, '$this->lv')";
 				$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
 			}
 			else
