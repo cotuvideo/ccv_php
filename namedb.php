@@ -100,6 +100,24 @@ SQL;
 		$this->name_array = array();
 	}
 
+	function insert($user_id, $co, $anonymity, $name, $visit_point)
+	{
+		$now = time();
+		$query = <<<SQL
+INSERT INTO
+	`$this->user_id`(user_id, community, anonymity, name, visit_point, last_lv, created_at, updated_at)
+	VALUES('$user_id', '$co', $anonymity, '$name', $visit_point, '$this->lv', $now, $now)
+SQL;
+		$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
+	}
+
+	function update($id, $set)
+	{
+		$now = time();
+		$query = "UPDATE `$this->user_id` SET $set,updated_at=$now WHERE id=$id";
+		$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
+	}
+
 	function addpoint($user_id, $premium, $anonymity, $score)
 	{
 		if($score !== 0)
@@ -197,9 +215,7 @@ SQL;
 			{
 				$name = $row['name'];
 			}
-			$id = $row['id'];
-			$query = "UPDATE `$this->user_id` SET $set WHERE id='$id'";
-			$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
+			$this->update($row['id'], $set);
 		}
 		else
 		{
@@ -219,8 +235,7 @@ SQL;
 				$this->visit_count = 1;
 				$this->visit_point = 0;
 				$this->addpoint($user_id, $premium, $anonymity, $score);
-				$query = "INSERT INTO `$this->user_id`(user_id, community, anonymity, name, visit_point, last_lv) VALUES('$user_id', '$this->co', $anonymity, '$name', $this->visit_point, '$this->lv')";
-				$this->mysqli->query($query) || die("\n$query\n".$this->mysqli->error."\n");
+				$this->insert($user_id, $this->co, $anonymity, $name, $this->visit_point);
 			}
 			else
 			{
