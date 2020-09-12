@@ -73,40 +73,23 @@ class Namedb
 		{
 			$query = <<<SQL
 CREATE TABLE `$user_id`(
-	id int(11) NOT NULL AUTO_INCREMENT,
+	id int unsigned NOT NULL AUTO_INCREMENT,
 	timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	create_date timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	last_member timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	last_visit timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	user_id char(27) NOT NULL,
-	community char(10) NOT NULL,
+	user_id varchar(27) NOT NULL,
+	community varchar(10) NOT NULL,
 	enable bool NOT NULL DEFAULT true,
-	name varchar(255) NOT NULL,
-	comment_count int NOT NULL DEFAULT 1,
-	visit_count int NOT NULL DEFAULT 1,
-	visit_point int NOT NULL DEFAULT 0,
-	last_lv char(12) NOT NULL,
-	PRIMARY KEY (id, user_id)
+	anonymity bool NOT NULL DEFAULT false,
+	name varchar(128) NOT NULL,
+	comment_count int unsigned NOT NULL DEFAULT 1,
+	visit_count int unsigned NOT NULL DEFAULT 1,
+	visit_point int unsigned NOT NULL DEFAULT 0,
+	last_lv varchar(12) NOT NULL,
+	created_at int unsigned NOT NULL DEFAULT 0,
+	updated_at int unsigned NOT NULL DEFAULT 0,
+	PRIMARY KEY (id),
+	UNIQUE KEY (user_id, community)
 ) DEFAULT CHARSET=utf8mb4
-SQL;
-			$result = $this->mysqli->query($query);
-			if($result === false)
-			{
-				exit("$query\n".$this->mysqli->error."\n");
-			}
-
-			$query = <<<SQL
-ALTER TABLE `$user_id`
-	drop last_member,
-	drop last_visit,
-	modify user_id varchar(27) not null,
-	modify community varchar(10) not null,
-	modify last_lv varchar(12) not null,
-	add anonymity bool NOT NULL DEFAULT false after enable,
-	add created_at int unsigned NOT NULL DEFAULT 0,
-	add updated_at int unsigned NOT NULL DEFAULT 0,
-	DROP PRIMARY KEY, ADD PRIMARY KEY (id),
-	ADD UNIQUE INDEX (user_id, community)
 SQL;
 			$result = $this->mysqli->query($query);
 			if($result === false)
