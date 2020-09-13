@@ -306,7 +306,7 @@ function put_comment($str)
 	$reader = new reader;
 	$reader->fp = $fp;
 
-	$namedb = new Namedb($id, $co, $xml->user->user_id, $xml->user->nickname, DB_HOST, $user, $pass, $db, DB_PORT);
+	$namedb = new Namedb($id, $co, $xml->user->user_id, $xml->user->nickname, DB_HOST, $user, $pass, DB, DB_PORT);
 
 	$log = "";
 	if($archive == 1)

@@ -31,7 +31,15 @@ function getusname($mysqli, $us)
 	return $default;
 }
 
-if(isset($_GET['db']))$db = $_GET['db'];
+if(isset($_GET['db']))
+{
+	$db = $_GET['db'];
+}
+else
+{
+	$db = DB;
+}
+
 $mysqli = new mysqli(DB_HOST, $user, $pass, $db, DB_PORT);
 if($mysqli->connect_errno)
 {
@@ -138,7 +146,8 @@ while($row = $result->fetch_assoc())
 }
 echo "</table>\n";
 
-$query = "SELECT * FROM $tb";
+/*
+$query = "SELECT * FROM user";
 $result = $mysqli->query($query);
 echo "<table border=\"1\">\n";
 echo "<tr>\n";
@@ -182,6 +191,52 @@ while($row = $result->fetch_assoc())
 	echo "</tr>\n";
 }
 echo "</table>\n";
+*/
+
+$query = "SELECT *, FROM_UNIXTIME(created_at) as created, FROM_UNIXTIME(updated_at) as updated FROM ".TB_MEMBER;
+$result = $mysqli->query($query);
+echo "<table border=\"1\">\n";
+echo "<tr>\n";
+echo "<th>id</th>\n";
+echo "<th>user_id</th>\n";
+echo "<th>user_name</th>\n";
+echo "<th>count</th>\n";
+echo "<th>rank</th>\n";
+echo "<th>created_at</th>\n";
+echo "<th>updated_at</th>\n";
+
+echo "<th>name</th>\n";
+echo "<th>count</th>\n";
+echo "<th>co</th>\n";
+echo "<th>timestamp</th>\n";
+echo "</tr>\n";
+while($row = $result->fetch_assoc())
+{
+	echo "<tr>\n";
+	echo "<td align=\"right\">$row[id]</td>\n";
+	$id = $row[user_id];
+	if($id == $user_id)
+	{
+		echo "<td bgcolor=\"#ffc0c0\"><a href=\".?db=$db&user_id=$id\">$id</a></td>\n";
+	}
+	else
+	{
+		echo "<td><a href=\".?db=$db&user_id=$id\">$id</a></td>\n";
+	}
+	$user = $row[user_name];
+	echo "<td><a href=\"https://www.nicovideo.jp/user/$id\">$user</a></td>\n";
+	echo "<td align=\"right\">$row[count]</td>\n";
+	echo "<td align=\"right\">$row[rank]</td>\n";
+	echo "<td>$row[created]</td>\n";
+	echo "<td>$row[updated]</td>\n";
+
+	echo "<td>".getval($mysqli, "SELECT name FROM $db.$id WHERE user_id=$id ORDER BY updated_at DESC LIMIT 1", '-')."</td>\n";
+	echo "<td align=\"right\">".getval($mysqli, "SELECT COUNT(*) FROM $db.$id", '-')."</td>\n";
+	echo "<td align=\"right\">".getval($mysqli, "SELECT COUNT(DISTINCT community) FROM $db.$id", '-')."</td>\n";
+	echo "<td>".getval($mysqli, "SELECT FROM_UNIXTIME(updated_at) FROM $db.$id ORDER BY updated_at DESC LIMIT 1", '-')."</td>\n";
+	echo "</tr>\n";
+}
+echo "</table>\n";
 
 if($user_id)
 {
@@ -221,7 +276,13 @@ if($user_id)
 	else
 	{
 		echo "$community:<a href=\"https://com.nicovideo.jp/community/$community\" target=\"_blank\">$coname</a><br>\n";
-		$query = "SELECT * FROM `$user_id` WHERE community='$community' ORDER BY timestamp DESC";
+		$query = <<<EOD
+SELECT *,
+	(UNIX_TIMESTAMP(now())-updated_at)/(60*60*24) as diffday,
+	FROM_UNIXTIME(created_at) as created,
+	FROM_UNIXTIME(updated_at) as updated
+FROM `$user_id` WHERE community='$community' ORDER BY timestamp DESC
+EOD;
 		$result = $mysqli->query($query);
 		if($result === false)
 		{
@@ -231,37 +292,46 @@ if($user_id)
 		echo "<tr>\n";
 		echo "<th></th>\n";
 		echo "<th>id</th>\n";
-		echo "<th>timestamp</th>\n";
-	//	echo "<th>create_date</th>\n";
-		echo "<th>last_member</th>\n";
-	//	echo "<th>last_visit</th>\n";
+
 	//	echo "<th>enable</th>\n";
 		echo "<th>user_id</th>\n";
 		echo "<th>name</th>\n";
 	//	echo "<th>community</th>\n";
-		echo "<th>comment_count</th>\n";
-		echo "<th>visit_count</th>\n";
-		echo "<th>visit_point</th>\n";
+		echo "<th>comment</th>\n";
+		echo "<th>visit</th>\n";
+		echo "<th>point</th>\n";
 	//	echo "<th>last_lv</th>\n";
+
+	//	echo "<th>last_member</th>\n";
+	//	echo "<th>last_visit</th>\n";
+		echo "<th>created_at</th>\n";
+	//	echo "<th>create_date</th>\n";
+		echo "<th>updated_at</th>\n";
+	//	echo "<th>timestamp</th>\n";
+		echo "<th>diffday</th>\n";
 		echo "</tr>\n";
 		$n = 0;
 		while($row = $result->fetch_assoc())
 		{
 			echo "<tr>\n";
-			echo "<td>$n</td>\n";
-			echo "<td>$row[id]</td>\n";
-			echo "<td>$row[timestamp]</td>\n";
-		//	echo "<td>$row[create_date]</td>\n";
-			echo "<td>$row[last_member]</td>\n";
-		//	echo "<td>$row[last_visit]</td>\n";
+			echo "<td align=\"right\">$n</td>\n";
+			echo "<td align=\"right\">$row[id]</td>\n";
+
 		//	echo "<td>$row[enable]</td>\n";
 			echo "<td>$row[user_id]</td>\n";
 			echo "<td>$row[name]</td>\n";
 		//	echo "<td>$row[community]</td>\n";
-			echo "<td>$row[comment_count]</td>\n";
-			echo "<td>$row[visit_count]</td>\n";
-			echo "<td>$row[visit_point]</td>\n";
+			echo "<td align=\"right\">$row[comment_count]</td>\n";
+			echo "<td align=\"right\">$row[visit_count]</td>\n";
+			echo "<td align=\"right\">$row[visit_point]</td>\n";
 		//	echo "<td>$row[last_lv]</td>\n";
+
+			echo "<td>$row[created]</td>\n";
+		//	echo "<td>$row[create_date]</td>\n";
+			echo "<td>$row[updated]</td>\n";
+		//	echo "<td>$row[timestamp]</td>\n";
+			echo "<td align=\"right\">$row[diffday]</td>\n";
+
 			echo "</tr>\n";
 			$n++;
 		}
