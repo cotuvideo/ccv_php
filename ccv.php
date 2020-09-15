@@ -3,6 +3,7 @@
 require 'define.php';
 require 'getplayerstatus.php';
 require 'namedb.php';
+require 'commentreader.php';
 
 $line = 0;
 $comment_cnt = 0;
@@ -13,29 +14,7 @@ $last_res = 0;
 function getnow()
 {
 	global $watch_start_time, $watch_seek_time;
-	global $spd;
-	return (microtime(true)-$watch_start_time)*$spd/4+$watch_seek_time;
-}
-
-class reader
-{
-	public $fp;
-	public $buf = "";
-
-	public function read()
-	{
-		for(;;)
-		{
-			$z = strpos($this->buf, "\0");
-			if($z !== false)
-			{
-				$str = substr($this->buf, 0, $z+1);
-				$this->buf = substr($this->buf, $z+1);
-				return $str;
-			}
-			$this->buf .= fread($this->fp, 4096);
-		}
-	}
+	return (microtime(true)-$watch_start_time)*SPEED/4+$watch_seek_time;
 }
 
 class Ccv
@@ -294,17 +273,8 @@ function put_comment($str)
 	echo "end_time     :".date("Y-m-d H:i:s", $end_time)."\n";
 	echo "archive      :".$archive."\n";
 
-	$fp = fsockopen($addr, $port, $errno, $errstr, 1);
-	if($fp === false)
-	{
-		echo "error $errno:$errstr\n";
-		echo "$addr:$port\n";
-		exit(1);
-	}
-	stream_set_timeout($fp, 1);
-
-	$reader = new reader;
-	$reader->fp = $fp;
+	$cr = new CommentReader();
+	$cr->sockopen($id, $addr, $port, $thread);
 
 	$namedb = new Namedb($id, $co, $xml->user->user_id, $xml->user->nickname, DB_HOST, $user, $pass, DB, DB_PORT);
 
@@ -318,51 +288,18 @@ function put_comment($str)
 		$a = explode("=", $file);
 		$waybackkey = $a[1];
 
-		$res_from = 1000;
 		$when = time();
 		$buf_no = 0;
 		while(1)
 		{
-			$content = "<thread thread=\"$thread\" waybackkey=\"$waybackkey\" user_id=\"$user_id\" version=\"20061206\" res_from=\"-$res_from\" scores=\"1\" when=\"$when\" />\0";
-			fwrite($fp, $content);
-			$res = "";
-			while(1)
-			{
-				$res .= fread($fp, 4096);
-				$info = stream_get_meta_data($fp);
-				if(substr($res, -1) == "\0")
-				{
-				//	echo sprintf("read:%4d timed_out:%d\n", strlen($res), (int)$info['timed_out']);
-					$xml = simplexml_load_string("<?xml version='1.0'?><root>".str_replace("\0", "\n", $res)."</root>");
-					if($xml === false)
-					{
-						exit("**** xml error ****\n");
-					}
-					$last_res = (int)$xml->thread['last_res'];
-					$no0 = (int)$xml->chat[0]['no'];
-					$count = (int)$xml->chat->count();
-					if($last_res === (int)$xml->chat[$count-1]['no'])
-					{
-						break;
-					}
-					if($info['timed_out'])
-					{
-						$res .= '<chat thread="1621188173" no="2290" vpos="275600" date="1518089305" date_usec="847406" user_id="1" premium="1">xxxxxxxxxx</chat>'."0";
-						echo "time out\n";
-						break;
-					}
-				}
-				if($info['timed_out'])
-				{
-					exit("**** time out ****\n");
-				}
-			}
+			$res = $cr->read_buf($thread, $waybackkey, $user_id, $when);
 			$data[$buf_no++] = $res;
-			$when = (int)$xml->chat[0]['date'];
+			$when = $cr->when;
+			$no0 = $cr->no0;
 			$log .= "when=$when no=$no0\n";
 //			file_put_contents("./tmp/$v.xml", $data[0]);
 			if($no0 == 1)break;
-		}
+        }
 		while($buf_no > 0)
 		{
 			$buf = $data[--$buf_no];
@@ -380,14 +317,14 @@ function put_comment($str)
 	else
 	{
 		$str = "<thread res_from=\"-1\" version=\"20061206\" scores=\"1\" thread=\"$thread\" />\0";
-		fwrite($fp, $str);
+		$cr->write($str);
 		while(1)
 		{
-			$str = $reader->read();
+			$str = $cr->read();
 			$res = put_comment($str);
 			if($res === true)break;
 		}
 	}
 
-	fclose($fp);
+	$cr->close();
 ?>

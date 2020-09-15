@@ -9,9 +9,9 @@ define('DB', getenv("CCV_DB"));
 define('TB_MEMBER', getenv("CCV_TB_MEMBER"));
 define('OWNERCOLOR', 93);
 define('FIRSTCOLOR', 96);
+define('SPEED', getenv("SPEED") ? (int)getenv("SPEED") : 4);
+define('SAVE', getenv("SAVE") ? (bool)getenv("SAVE") : false);
 $user = getenv("CCV_USER");
 $pass = getenv("CCV_PASS");
-$db = getenv("CCV_DB");
-$spd = 4;
 
 ?>
