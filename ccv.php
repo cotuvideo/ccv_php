@@ -221,16 +221,6 @@ function put_comment($str)
 		exit(1);
 	}
 
-	if(isset($argv[3]))
-	{
-		$str = explode(':', $argv[3]);
-		$cnt = count($str);
-		$n = 0;
-		if($cnt>=3)$watch_seek_time = $str[$n++];
-		if($cnt>=2)$watch_seek_time = $watch_seek_time*60+$str[$n++];
-		if($cnt>=1)$watch_seek_time = $watch_seek_time*60+$str[$n++];
-	}
-
 	$xml = new SimpleXMLElement($playerstatus);
 	$status = $xml['status'];
 	if($status != 'ok')
@@ -257,6 +247,21 @@ function put_comment($str)
 	$addr   = (string)$xml->ms->addr;
 	$port   = (int)$xml->ms->port;
 	$thread = (int)$xml->ms->thread;
+
+	if(isset($argv[3]))
+	{
+		if($argv[3] == 's')
+		{
+			file_put_contents("./playerstatus/$id.xml", $playerstatus);
+			exit("save $title\n");
+		}
+		$str = explode(':', $argv[3]);
+		$cnt = count($str);
+		$n = 0;
+		if($cnt>=3)$watch_seek_time = $str[$n++];
+		if($cnt>=2)$watch_seek_time = $watch_seek_time*60+$str[$n++];
+		if($cnt>=1)$watch_seek_time = $watch_seek_time*60+$str[$n++];
+	}
 
 	echo "$co\n";
 	echo "$title\n";
