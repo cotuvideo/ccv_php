@@ -31,7 +31,16 @@ class Ccv
 
 	function get_date($date)
 	{
-		return sprintf("%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
+		if($date < 0)
+		{
+			$date = -$date;
+			$sign = '-';
+		}
+		else
+		{
+			$sign = '';
+		}
+		return sprintf("$sign%d:%02d:%02d", $date/60/60, $date/60%60, $date%60);
 	}
 
 	function put_comment($xml, $name, $text, $col=0)
